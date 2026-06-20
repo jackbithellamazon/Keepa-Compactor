@@ -1,0 +1,485 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keepa Sourcing Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#080b11; --ink2:#0b0e16; --surface:#10141d; --surface2:#151a26; --raise:#1a2030;
+    --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
+    --text:#eef1f7; --muted:#868ea2; --faint:#565d6f;
+    --iris:#6e7bff; --iris-d:#5662ee; --iris2:#9a7bff;
+    --jade:#36d6a4; --jade-dim:rgba(54,214,164,.13);
+    --coral:#f76a83; --coral-dim:rgba(247,106,131,.12);
+    --amber:#fbbf24;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --disp:'Bricolage Grotesque',var(--sans);
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --ease:cubic-bezier(.22,.7,.16,1);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{margin:0;font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--text);
+    letter-spacing:-.006em;
+    background:
+      radial-gradient(900px 440px at 8% -14%, rgba(110,123,255,.10), transparent 56%),
+      radial-gradient(760px 380px at 104% -8%, rgba(154,123,255,.07), transparent 52%),
+      var(--ink);
+    background-attachment:fixed;min-height:100vh}
+  *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+  *::-webkit-scrollbar{width:9px;height:9px}
+  *::-webkit-scrollbar-track{background:transparent}
+  *::-webkit-scrollbar-thumb{background:rgba(255,255,255,.13);border-radius:20px;border:2px solid transparent;background-clip:padding-box}
+  *::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22);background-clip:padding-box}
+  ::selection{background:rgba(110,123,255,.35);color:#fff}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 22px 70px}
+
+  /* ---- compact top bar ---- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:13px;min-width:0}
+  .mark{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;
+    background:linear-gradient(150deg,var(--iris),var(--iris2));color:#fff;
+    box-shadow:0 8px 22px -10px rgba(110,123,255,.9),0 1px 0 rgba(255,255,255,.25) inset}
+  .mark svg{width:21px;height:21px}
+  .brand h1{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:-.03em;
+    margin:0;line-height:1.05;white-space:nowrap}
+  .brand h1 .b{background:linear-gradient(96deg,var(--iris),var(--iris2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand .tag{margin:2px 0 0;font-size:12.5px;color:var(--muted);line-height:1.3;
+    overflow:hidden;text-overflow:ellipsis}
+  .privacy{display:flex;align-items:center;gap:8px;flex:none;font-family:var(--mono);font-size:11px;
+    letter-spacing:.02em;color:var(--muted);background:var(--surface);border:1px solid var(--line);
+    padding:7px 13px;border-radius:30px}
+  .privacy .dot{width:7px;height:7px;border-radius:50%;background:var(--jade);
+    box-shadow:0 0 9px rgba(54,214,164,.9);animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+  /* ---- tabs ---- */
+  .tabs{display:flex;gap:5px;margin-bottom:16px;padding:5px;border-radius:14px;
+    background:var(--surface);border:1px solid var(--line);width:fit-content;
+    box-shadow:0 1px 0 rgba(255,255,255,.03) inset}
+  .tab{font-family:var(--sans);font-weight:600;font-size:13.5px;color:var(--muted);
+    background:none;border:none;cursor:pointer;padding:8px 17px;border-radius:9px;
+    display:flex;align-items:center;gap:9px;transition:color .2s,background .2s,box-shadow .2s}
+  .tab .step{font-family:var(--mono);font-size:11px;font-weight:600;width:19px;height:19px;border-radius:6px;
+    display:grid;place-items:center;background:var(--surface2);color:var(--faint);transition:.2s}
+  .tab:hover{color:var(--text)}
+  .tab:focus-visible{outline:2px solid var(--iris);outline-offset:2px}
+  .tab.active{color:#fff;background:linear-gradient(180deg,rgba(110,123,255,.26),rgba(110,123,255,.1));
+    box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 5px 16px -11px rgba(110,123,255,.9)}
+  .tab.active .step{background:var(--iris);color:#0a0d14}
+
+  .panel{display:none}
+  .panel.active{display:block;animation:rise .38s var(--ease)}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 36%),var(--surface);
+    border:1px solid var(--line);border-radius:16px;padding:20px;
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 26px 60px -40px rgba(0,0,0,.9)}
+  .intro{font-size:14px;color:var(--text);margin:0 0 16px;font-weight:500}
+  .intro .q{color:var(--muted);font-weight:400}
+
+  /* ---- settings ---- */
+  .settings{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;
+    padding:15px 17px;background:var(--surface2);border:1px solid var(--line);
+    border-radius:12px;margin-bottom:14px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+  .field input,.field select{font-size:14px;color:var(--text);background:var(--ink);
+    border:1px solid var(--line2);border-radius:9px;padding:9px 12px;
+    transition:border .16s,box-shadow .16s}
+  .field input{font-family:var(--mono);width:84px;text-align:center;font-variant-numeric:tabular-nums}
+  .field select{font-family:var(--sans);font-weight:500;min-width:148px;cursor:pointer;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23868ea2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
+  .field input:hover,.field select:hover{border-color:rgba(255,255,255,.2)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--iris);box-shadow:0 0 0 3px rgba(110,123,255,.2)}
+  .rule{font-size:12.5px;color:var(--muted);margin:0;flex:1 1 240px;align-self:center;min-width:220px;line-height:1.9}
+  .rule .grp{display:inline-flex;align-items:center;white-space:nowrap}
+  .rule .chip{font-family:var(--mono);font-size:11.5px;background:var(--ink);border:1px solid var(--line2);
+    padding:2px 8px;border-radius:6px;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .rule .or{color:var(--iris);font-weight:600;font-family:var(--mono);font-size:11px;margin:0 6px}
+
+  /* ---- slim horizontal dropzone ---- */
+  .drop{position:relative;display:flex;align-items:center;gap:16px;text-align:left;
+    border:1.5px dashed var(--line2);border-radius:13px;padding:16px 20px;cursor:pointer;overflow:hidden;
+    background:linear-gradient(100deg,rgba(110,123,255,.06),transparent 60%);
+    transition:border-color .2s,background .2s}
+  .drop:hover{border-color:rgba(110,123,255,.6);background:linear-gradient(100deg,rgba(110,123,255,.12),transparent 60%)}
+  .drop.over{border-color:var(--iris);border-style:solid;background:rgba(110,123,255,.12)}
+  .drop .ic{width:42px;height:42px;flex:none;border-radius:11px;display:grid;place-items:center;
+    background:var(--surface2);border:1px solid var(--line);color:var(--iris);transition:transform .25s var(--ease)}
+  .drop.over .ic{transform:translateY(-2px)}
+  .drop .ic svg{width:20px;height:20px}
+  .drop .txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .drop .big{font-family:var(--disp);font-weight:700;font-size:15px;color:var(--text);letter-spacing:-.01em}
+  .drop .small{font-size:12px;color:var(--muted)}
+
+  input[type=file]{display:none}
+
+  .files{margin:13px 0 0;display:flex;flex-wrap:wrap;gap:7px}
+  .files .f{font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--surface2);
+    border:1px solid var(--line);border-radius:8px;padding:5px 11px;display:flex;align-items:center;gap:8px;
+    animation:pop .3s var(--ease)}
+  .files .f::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--jade);box-shadow:0 0 7px rgba(54,214,164,.7)}
+
+  .warn{display:none;margin-top:14px;padding:13px 16px;border-radius:11px;
+    background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.3);color:#ffe6a8;
+    font-size:13px;line-height:1.55;animation:pop .3s var(--ease)}
+  .warn.show{display:block}
+  .warn b{color:var(--amber)}
+
+  /* ---- yield ---- */
+  .yield{margin:20px 0 2px;display:none}
+  .yield.show{display:block;animation:pop .35s var(--ease)}
+  .yield .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .yield .head{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .yield .head .pct{color:var(--jade);margin-left:8px}
+  .yield .total{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .bar{height:46px;border-radius:12px;overflow:hidden;display:flex;border:1px solid var(--line);
+    background:var(--ink);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+  .bar .seg{display:flex;align-items:center;padding:0 16px;gap:10px;min-width:0;
+    transition:width .8s var(--ease);white-space:nowrap;overflow:hidden}
+  .bar .keep{background:linear-gradient(180deg,rgba(54,214,164,.32),rgba(54,214,164,.14));color:#baf3dd}
+  .bar .drop{background:linear-gradient(180deg,rgba(247,106,131,.27),rgba(247,106,131,.11));color:#ffccd4}
+  .bar .keep+.drop{border-left:1px solid rgba(255,255,255,.12)}
+  .bar .seg .n{font-family:var(--mono);font-weight:600;font-size:16px;color:#fff;font-variant-numeric:tabular-nums}
+  .bar .seg .l{font-size:11.5px;opacity:.82;font-weight:450}
+  .bar .seg.empty{padding:0}
+
+  /* ---- toolbar ---- */
+  .toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:20px}
+  .toolbar .spacer{flex:1 1 auto;min-width:14px;align-self:stretch;position:relative}
+  .toolbar .spacer::before{content:"";position:absolute;left:50%;top:9px;bottom:9px;width:1px;
+    background:var(--line);transform:translateX(-50%)}
+  .btn{font-family:var(--sans);font-weight:600;font-size:13.5px;height:40px;padding:0 17px;
+    border-radius:11px;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;
+    transition:transform .09s,filter .16s,background .16s,border-color .16s,color .16s;white-space:nowrap;letter-spacing:-.01em}
+  .btn:active{transform:translateY(1px) scale(.99)}
+  .btn:focus-visible{outline:2px solid var(--iris);outline-offset:2px}
+  .btn.primary{background:linear-gradient(180deg,var(--iris),var(--iris-d));color:#fff;
+    box-shadow:0 8px 20px -10px rgba(110,123,255,.95),0 1px 0 rgba(255,255,255,.18) inset}
+  .btn.primary:hover{filter:brightness(1.09)}
+  .btn.primary.ok{background:linear-gradient(180deg,var(--jade),#22b888);box-shadow:0 8px 20px -10px rgba(54,214,164,.9)}
+  .btn.solid{background:var(--raise);color:var(--text);border-color:var(--line2)}
+  .btn.solid:hover{border-color:rgba(110,123,255,.55);background:#1e2536}
+  .btn.solid.ok{color:var(--jade);border-color:rgba(54,214,164,.5)}
+  .btn.ghost{background:transparent;color:var(--muted);border-color:var(--line)}
+  .btn.ghost:hover{color:var(--text);border-color:var(--line2);background:rgba(255,255,255,.02)}
+  .btn.ghost.danger:hover{color:var(--coral);border-color:rgba(247,106,131,.45)}
+  .btn svg{width:15px;height:15px;flex:none}
+
+  .out{width:100%;min-height:84px;margin-top:16px;background:var(--ink);color:var(--muted);
+    border:1px solid var(--line);border-radius:11px;padding:14px 15px;font-family:var(--mono);
+    font-size:12px;line-height:1.75;resize:vertical;display:none;letter-spacing:.01em}
+  .out:focus{outline:none;border-color:var(--line2)}
+  .out.show{display:block;animation:pop .3s var(--ease)}
+
+  /* ---- table ---- */
+  .tablewrap{display:none;margin-top:18px;border:1px solid var(--line);border-radius:13px;overflow:hidden}
+  .tablewrap.show{display:block;animation:pop .35s var(--ease)}
+  .tablescroll{max-height:430px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{position:sticky;top:0;z-index:1;text-align:left;font-family:var(--mono);font-weight:500;
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+    padding:11px 16px;background:var(--surface2);border-bottom:1px solid var(--line)}
+  thead th.r{text-align:right}
+  tbody td{padding:10px 16px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr{transition:background .12s}
+  tbody tr:hover td{background:rgba(110,123,255,.05)}
+  td.asin{font-family:var(--mono);color:var(--text);font-size:12px;letter-spacing:.01em}
+  td.title{white-space:normal;max-width:380px;color:var(--muted);font-size:12px;line-height:1.45}
+  td.num{font-family:var(--mono);color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+  td.num .z{color:var(--faint)}
+  td.st{text-align:right}
+  .pill{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.09em;padding:4px 11px;border-radius:20px;display:inline-block;line-height:1}
+  .pill.keep{background:var(--jade-dim);color:var(--jade)}
+  .pill.drop{background:var(--coral-dim);color:var(--coral)}
+
+  .hint{font-size:12px;color:var(--faint);margin:10px 0 0}
+  footer{margin-top:26px;text-align:center;font-size:11px;color:var(--faint);font-family:var(--mono);letter-spacing:.04em}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(12px);
+    background:var(--jade);color:#04241b;font-weight:600;font-size:13.5px;padding:11px 22px;border-radius:11px;
+    opacity:0;pointer-events:none;transition:.26s var(--ease);box-shadow:0 18px 40px -18px rgba(54,214,164,.8);
+    z-index:50;display:flex;align-items:center;gap:9px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:var(--amber);color:#3a2c00;box-shadow:0 18px 40px -18px rgba(251,191,36,.8)}
+  .toast svg{width:15px;height:15px}
+
+  @media (max-width:640px){
+    .wrap{padding:20px 14px 70px}
+    .brand .tag{display:none}
+    .privacy{display:none}
+    .settings{gap:14px}
+    .field{flex:1 1 120px}
+    .field input,.field select{width:100%}
+    .btn{flex:1 1 auto;justify-content:center}
+    .toolbar .spacer{display:none}
+    td.title{max-width:180px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M7 12h10"/><path d="M11 19h2"/></svg></div>
+      <div>
+        <h1>Keepa Sourcing <span class="b">Console</span></h1>
+        <p class="tag">Merge ASIN exports, then auto-sort the Product Viewer results.</p>
+      </div>
+    </div>
+    <div class="privacy"><span class="dot"></span>Runs locally · nothing uploaded</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="combine"><span class="step">1</span>Combine ASINs</button>
+    <button class="tab" data-tab="filter"><span class="step">2</span>Filter &amp; sort</button>
+  </div>
+
+  <!-- ===================== PART 1 ===================== -->
+  <section class="panel active" id="combine">
+    <div class="card">
+      <p class="intro">Drop every country's ASIN export. <span class="q">Merged, de-duplicated, handed back as one clean list — copy it or open it straight in Keepa.</span></p>
+
+      <div class="drop" id="dropC" tabindex="0" role="button" aria-label="Upload ASIN CSV files">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg></span>
+        <span class="txt"><span class="big">Drop CSV files here</span><span class="small">Or click to browse · ASIN-only or full exports · any number of files</span></span>
+      </div>
+      <input type="file" id="fileC" accept=".csv,text/csv" multiple>
+      <div class="files" id="filesC"></div>
+
+      <div class="yield" id="yieldC">
+        <div class="row"><span class="head">Unique vs duplicate<span class="pct" id="cPct"></span></span><span class="total" id="cTotalLbl">0 read</span></div>
+        <div class="bar">
+          <div class="seg keep" id="cKeepSeg" style="width:0"><span class="n" id="cUnique">0</span><span class="l">unique</span></div>
+          <div class="seg drop" id="cDropSeg" style="width:0"><span class="n" id="cDupes">0</span><span class="l">duplicates removed</span></div>
+        </div>
+      </div>
+
+      <div class="settings" id="setC" style="display:none">
+        <div class="field">
+          <label>Keepa domain · for direct open</label>
+          <select id="domainC">
+            <option value="2">United Kingdom</option><option value="3">Germany</option>
+            <option value="4">France</option><option value="8">Italy</option>
+            <option value="9">Spain</option><option value="1">United States</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toolbar" id="barC" style="display:none">
+        <button class="btn primary" id="copyC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span class="lab">Copy unique ASINs</span></button>
+        <button class="btn solid" id="openC"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Open in Keepa</button>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="dlC">Download .txt</button>
+        <button class="btn ghost danger" id="clearC">Clear</button>
+      </div>
+      <textarea class="out" id="outC" placeholder="Combined unique ASINs appear here…" spellcheck="false"></textarea>
+      <p class="hint" id="hintC" style="display:none">Comma-separated and ready for Keepa Product Viewer.</p>
+    </div>
+  </section>
+
+  <!-- ===================== PART 2 ===================== -->
+  <section class="panel" id="filter">
+    <div class="card">
+      <p class="intro">Drop the full Keepa Product Viewer export. <span class="q">Everything that doesn't sell gets sorted out automatically.</span></p>
+
+      <div class="settings">
+        <div class="field"><label>Keep if drops 30d ≥</label><input type="number" id="thDrops" value="10" min="0" inputmode="numeric"></div>
+        <div class="field"><label>…or if bought &gt;</label><input type="number" id="thBought" value="10" min="0" inputmode="numeric"></div>
+        <div class="field"><label>Keepa domain</label>
+          <select id="domainF">
+            <option value="2">United Kingdom</option><option value="3">Germany</option>
+            <option value="4">France</option><option value="8">Italy</option>
+            <option value="9">Spain</option><option value="1">United States</option>
+          </select>
+        </div>
+        <p class="rule"><span class="grp">Keep when <span class="chip">drops ≥ <span id="rD">10</span></span><span class="or">OR</span><span class="chip">bought &gt; <span id="rB">10</span></span></span>. Blank bought counts as zero; <span class="grp"><span class="chip">50+</span> and <span class="chip">1,000</span></span> are read correctly.</p>
+      </div>
+
+      <div class="drop" id="dropF" tabindex="0" role="button" aria-label="Upload Product Viewer CSV">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg></span>
+        <span class="txt"><span class="big">Drop the Product Viewer CSV here</span><span class="small">Re-sorts instantly when you change the thresholds above</span></span>
+      </div>
+      <input type="file" id="fileF" accept=".csv,text/csv">
+      <div class="files" id="filesF"></div>
+      <div class="warn" id="warnF"></div>
+
+      <div class="yield" id="yieldF">
+        <div class="row"><span class="head">Kept vs dropped<span class="pct" id="fPct"></span></span><span class="total" id="fTotalLbl">0 rows</span></div>
+        <div class="bar">
+          <div class="seg keep" id="fKeepSeg" style="width:0"><span class="n" id="fKept">0</span><span class="l">kept</span></div>
+          <div class="seg drop" id="fDropSeg" style="width:0"><span class="n" id="fDropped">0</span><span class="l">dropped</span></div>
+        </div>
+      </div>
+
+      <div class="toolbar" id="barF" style="display:none">
+        <button class="btn primary" id="copyF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span class="lab">Copy kept ASINs</span></button>
+        <button class="btn solid" id="openKeepa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Open in Keepa</button>
+        <button class="btn solid" id="copyKeepa"><span class="lab">Copy Keepa link</span></button>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="dlCsvF">Download filtered CSV</button>
+        <button class="btn ghost" id="toggleAll">Show all rows</button>
+        <button class="btn ghost danger" id="clearF">Clear</button>
+      </div>
+      <textarea class="out" id="outF" spellcheck="false"></textarea>
+
+      <div class="tablewrap" id="tableWrap"><div class="tablescroll"><table id="tableF"></table></div></div>
+    </div>
+  </section>
+
+  <footer>No data leaves this page · switch tabs to start fresh</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+function toast(msg,err){const t=$('#toast');t.innerHTML=(err?'':CHECK)+'<span>'+msg+'</span>';
+  t.className='toast show'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='toast',1600);}
+function flashOk(btn,word){const lab=btn.querySelector('.lab');if(!lab)return;
+  const prev=lab.textContent;btn.classList.add('ok');lab.textContent=word||'Copied';
+  clearTimeout(btn._t);btn._t=setTimeout(()=>{btn.classList.remove('ok');lab.textContent=prev;},1400);}
+function copy(text,msg,btn,word){if(!text){toast('Nothing to copy',true);return;}
+  const ok=()=>{toast(msg);if(btn)flashOk(btn,word);};
+  navigator.clipboard.writeText(text).then(ok).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');ta.remove();ok();});}
+function download(name,text,type){const b=new Blob([text],{type:type||'text/plain'});
+  const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+function countUp(el,to){const from=parseInt(el.textContent.replace(/\D/g,''))||0;
+  if(from===to){el.textContent=to.toLocaleString();return;}
+  const start=performance.now(),dur=560;
+  function step(now){const p=Math.min(1,(now-start)/dur);const e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(from+(to-from)*e).toLocaleString();if(p<1)requestAnimationFrame(step);}
+  requestAnimationFrame(step);}
+function parseCSV(text){text=text.replace(/^\uFEFF/,'');const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}
+    else{if(c==='"')q=true;else if(c===','){row.push(cur);cur='';}
+      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}else if(c==='\r'){}else cur+=c;}}
+  if(cur!==''||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(r=>r.length&&!(r.length===1&&r[0].trim()===''));}
+const asinRe=/^B[0-9A-Z]{9}$/;
+function findAsinCol(header,rows){let i=header.findIndex(h=>h.trim().toLowerCase()==='asin');if(i>=0)return i;
+  let best=-1,score=0;for(let c=0;c<header.length;c++){let s=0;
+    for(let r=0;r<rows.length;r++)if(asinRe.test((rows[r][c]||'').trim()))s++;
+    if(s>score){score=s;best=c;}}return score>0?best:-1;}
+function randomListId(){const c='abcdefghijklmnopqrstuvwxyz0123456789';let s='';
+  for(let i=0;i<64;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function keepaLink(asins,domain){if(!asins.length)return'';const o={};o[domain]=asins;
+  o.listId=randomListId();o.includeInaccessibleAsins=false;
+  return'https://keepa.com/#!viewer/'+encodeURIComponent(JSON.stringify(o));}
+function escapeHtml(s){return(''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function setBar(k,d,keep,drop){const tot=keep+drop||1;const kp=keep/tot*100;
+  k.style.width=kp+'%';d.style.width=(100-kp)+'%';k.classList.toggle('empty',keep===0);d.classList.toggle('empty',drop===0);}
+function dz(zone,cb){zone.addEventListener('click',()=>cb.click());
+  zone.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();cb.click();}});
+  ['dragover','dragenter'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('over');}));
+  zone.addEventListener('dragleave',e=>{e.preventDefault();zone.classList.remove('over');});}
+
+/* PART 1 */
+let combinedSet=new Map(),combinedCount=0,filesC=[];
+function renderC(){const uniq=[...combinedSet.keys()],has=uniq.length>0;
+  $('#yieldC').classList.toggle('show',has);$('#setC').style.display=has?'flex':'none';
+  $('#barC').style.display=has?'flex':'none';$('#outC').classList.toggle('show',has);
+  $('#hintC').style.display=has?'block':'none';
+  $('#cTotalLbl').textContent=combinedCount.toLocaleString()+' read';
+  const dupes=combinedCount-uniq.length;countUp($('#cUnique'),uniq.length);countUp($('#cDupes'),dupes);
+  $('#cPct').textContent=has?Math.round(uniq.length/combinedCount*100)+'% unique':'';
+  setBar($('#cKeepSeg'),$('#cDropSeg'),uniq.length,dupes);$('#outC').value=uniq.join(', ');
+  $('#filesC').innerHTML=filesC.map(f=>`<span class="f">${escapeHtml(f)}</span>`).join('');}
+function handleCFiles(list){const arr=[...list];if(!arr.length)return;let done=0;
+  arr.forEach(file=>{filesC.push(file.name);const r=new FileReader();
+    r.onload=e=>{const rows=parseCSV(e.target.result);
+      if(rows.length){const header=rows[0],body=rows.slice(1);
+        const headerIsAsin=asinRe.test((header[0]||'').trim());const all=headerIsAsin?rows:body;
+        let col=findAsinCol(header,body);if(col<0)col=0;
+        all.forEach(rw=>{const v=(rw[col]||rw[0]||'').trim();
+          if(asinRe.test(v)){combinedCount++;if(!combinedSet.has(v))combinedSet.set(v,true);}});}
+      if(++done===arr.length)renderC();};r.readAsText(file);});}
+dz($('#dropC'),$('#fileC'));
+$('#fileC').addEventListener('change',e=>handleCFiles(e.target.files));
+$('#dropC').addEventListener('drop',e=>{e.preventDefault();$('#dropC').classList.remove('over');handleCFiles(e.dataTransfer.files);});
+$('#copyC').addEventListener('click',e=>copy($('#outC').value,combinedSet.size+' ASINs copied',e.currentTarget,'Copied'));
+$('#openC').addEventListener('click',()=>{const a=[...combinedSet.keys()];
+  if(!a.length){toast('Nothing to open',true);return;}window.open(keepaLink(a,$('#domainC').value),'_blank');});
+$('#dlC').addEventListener('click',()=>download('unique-asins.txt',$('#outC').value));
+
+/* PART 2 */
+let viewerRows=[],viewerHeader=[],idxAsin=-1,idxDrops=-1,idxBought=-1,idxTitle=-1,showAll=false,keptAsins=[];
+function num(v){if(v==null)return 0;v=(''+v).trim().replace(/,/g,'').replace(/\+/g,'');
+  if(v==='')return 0;const n=parseFloat(v);return isNaN(n)?0:n;}
+function findCol(names){for(const n of names){const i=viewerHeader.findIndex(h=>h.trim().toLowerCase()===n);if(i>=0)return i;}
+  for(const n of names){const i=viewerHeader.findIndex(h=>h.trim().toLowerCase().includes(n));if(i>=0)return i;}return -1;}
+function runFilter(){if(!viewerRows.length)return;
+  const thD=num($('#thDrops').value),thB=num($('#thBought').value);$('#rD').textContent=thD;$('#rB').textContent=thB;
+  if(idxDrops<0||idxBought<0||idxAsin<0){const miss=[];
+    if(idxAsin<0)miss.push('ASIN');if(idxDrops<0)miss.push('Sales Rank: Drops last 30 days');
+    if(idxBought<0)miss.push('Monthly Sales Trends: Bought in past month');
+    $('#warnF').innerHTML='<b>This doesn\'t look like a Product Viewer export.</b> Missing column'+(miss.length>1?'s':'')+': '+miss.join(', ')+'. This tab needs the full export with all columns — a plain ASIN list belongs in tab 1.';
+    $('#warnF').classList.add('show');$('#yieldF').classList.remove('show');$('#barF').style.display='none';$('#tableWrap').classList.remove('show');return;}
+  $('#warnF').classList.remove('show');let kept=[],dropped=[];
+  viewerRows.forEach(r=>{const d=num(r[idxDrops]),b=num(r[idxBought]);const keep=d>=thD||b>thB;
+    (keep?kept:dropped).push({asin:(r[idxAsin]||'').trim(),title:idxTitle>=0?(r[idxTitle]||''):'',drops:d,bought:b,keep});});
+  $('#yieldF').classList.add('show');$('#barF').style.display='flex';
+  $('#fTotalLbl').textContent=viewerRows.length.toLocaleString()+' rows';
+  countUp($('#fKept'),kept.length);countUp($('#fDropped'),dropped.length);
+  $('#fPct').textContent=Math.round(kept.length/viewerRows.length*100)+'% kept';
+  setBar($('#fKeepSeg'),$('#fDropSeg'),kept.length,dropped.length);
+  keptAsins=kept.map(k=>k.asin);$('#outF').value=keptAsins.join(', ');
+  const listArr=showAll?[...kept,...dropped]:kept;
+  let h='<thead><tr><th>ASIN</th><th>Title</th><th class="r">Drops 30d</th><th class="r">Bought</th><th class="r">Status</th></tr></thead><tbody>';
+  listArr.slice(0,1000).forEach(k=>{h+=`<tr><td class="asin">${k.asin}</td><td class="title">${escapeHtml(k.title)}</td>`+
+    `<td class="num">${k.drops?k.drops.toLocaleString():'<span class=z>0</span>'}</td>`+
+    `<td class="num">${k.bought?k.bought.toLocaleString():'<span class=z>—</span>'}</td>`+
+    `<td class="st"><span class="pill ${k.keep?'keep':'drop'}">${k.keep?'KEEP':'DROP'}</span></td></tr>`;});
+  h+='</tbody>';$('#tableF').innerHTML=h;$('#tableWrap').classList.add('show');
+  $('#toggleAll').textContent=showAll?'Show kept only':'Show all rows';
+  if(listArr.length>1000)toast('Showing first 1,000 rows');}
+function handleFFile(file){$('#filesF').innerHTML=`<span class="f">${escapeHtml(file.name)}</span>`;
+  const r=new FileReader();r.onload=e=>{const rows=parseCSV(e.target.result);
+    if(rows.length<2){toast('No data rows found',true);return;}
+    viewerHeader=rows[0];viewerRows=rows.slice(1);idxAsin=findCol(['asin']);
+    idxDrops=findCol(['sales rank: drops last 30 days','drops last 30 days','drops']);
+    idxBought=findCol(['monthly sales trends: bought in past month','bought in past month','bought']);
+    idxTitle=findCol(['title']);runFilter();};r.readAsText(file);}
+dz($('#dropF'),$('#fileF'));
+$('#fileF').addEventListener('change',e=>{if(e.target.files[0])handleFFile(e.target.files[0]);});
+$('#dropF').addEventListener('drop',e=>{e.preventDefault();$('#dropF').classList.remove('over');if(e.dataTransfer.files[0])handleFFile(e.dataTransfer.files[0]);});
+$('#thDrops').addEventListener('input',runFilter);$('#thBought').addEventListener('input',runFilter);
+$('#copyF').addEventListener('click',e=>copy($('#outF').value,$('#fKept').textContent+' ASINs copied',e.currentTarget,'Copied'));
+$('#openKeepa').addEventListener('click',()=>{if(!keptAsins.length){toast('No ASINs to open',true);return;}window.open(keepaLink(keptAsins,$('#domainF').value),'_blank');});
+$('#copyKeepa').addEventListener('click',e=>{if(!keptAsins.length){toast('No ASINs',true);return;}copy(keepaLink(keptAsins,$('#domainF').value),'Keepa link copied',e.currentTarget,'Link copied');});
+$('#toggleAll').addEventListener('click',()=>{showAll=!showAll;runFilter();});
+$('#dlCsvF').addEventListener('click',()=>{if(idxDrops<0||idxBought<0){toast('No valid export loaded',true);return;}
+  const thD=num($('#thDrops').value),thB=num($('#thBought').value);
+  const keptRaw=viewerRows.filter(r=>num(r[idxDrops])>=thD||num(r[idxBought])>thB);
+  const esc=v=>{v=v==null?'':''+v;return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const out=[viewerHeader,...keptRaw].map(r=>r.map(esc).join(',')).join('\r\n');download('keepa-filtered.csv',out,'text/csv');});
+
+/* clear + tab wipe */
+function clearCombine(){combinedSet=new Map();combinedCount=0;filesC=[];$('#fileC').value='';renderC();}
+function clearFilter(){viewerRows=[];keptAsins=[];showAll=false;$('#fileF').value='';
+  $('#yieldF').classList.remove('show');$('#barF').style.display='none';$('#tableWrap').classList.remove('show');
+  $('#warnF').classList.remove('show');$('#filesF').innerHTML='';$('#outF').classList.remove('show');$('#outF').value='';}
+$('#clearC').addEventListener('click',clearCombine);$('#clearF').addEventListener('click',clearFilter);
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{clearCombine();clearFilter();
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$('#'+t.dataset.tab).classList.add('active');}));
+</script>
+</body>
+</html>
